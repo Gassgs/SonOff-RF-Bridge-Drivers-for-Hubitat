@@ -35,7 +35,7 @@
 def driverVer() { return "2.4" }
 
 metadata {
-    definition(name: "Sonoff RF Curtain/Shades", namespace: "Gassgs", author: "GaryG,", importUrl: "https://raw.githubusercontent.com/") {
+    definition(name: "Sonoff RF Curtain/Shades", namespace: "Gassgs", author: "GaryG,", importUrl: "https://raw.githubusercontent.com/Gassgs/SonOff-RF-Bridge-Drivers-for-Hubitat/master/Sonoff%20RF%20Bridge%20Curtain-shades%20Driver") {
         
         capability "WindowShade"
 		capability "Switch"
