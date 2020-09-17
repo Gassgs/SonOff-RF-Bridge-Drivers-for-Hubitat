@@ -1,17 +1,17 @@
 /*
-* Sonoff RF  Switch
-*
-* Calls URIs with HTTP GET forSonOff RF Bridge  switch on on/off
+ * Sonoff RF  Switch
+ *
+ * Calls URIs with HTTP GET forSonOff RF Bridge  switch on on/off
 *
 *
 * Based on the Hubitat community driver httpGetSwitch 
 * https://raw.githubusercontent.com/hubitat/HubitatPublic/master/examples/drivers/httpGetSwitch.groovy
 *
 * Example "B0 raw code" 
-*    "AAB0210308017C04BA31922819081908190819090908190819081908190818181818181855"
-* 
-*/
-def driverVer() { return "2.0" }
+    "AAB0210308017C04BA31922819081908190819090908190819081908190818181818181855"
+ * 
+ */
+def driverVer() { return "2.1" }
 
 metadata {
     definition(name: "Sonoff RF  Switch", namespace: "Gassgs ", author: "Gary G", importUrl: "https://raw.githubusercontent.com/Gassgs/SonOff-RF-Bridge-Drivers-for-Hubitat/master/Sonoff%20RF%20Switch") {
@@ -25,7 +25,7 @@ preferences {
     section("URIs") {
         input "onURI", "text", title: "On B0 Raw(no  spaces)", required: false
         input "offURI", "text", title: "Off B0 Raw(no spaces)", required: false
-        input "sonoffIP", "text", title: "Sonoff RF Bridge IP Address", required: true
+		input "sonoffIP", "text", title: "Sonoff RF Bridge IP Address", required: true
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true
     }
 }
@@ -39,6 +39,7 @@ def updated() {
     log.info "updated..."
     log.warn "debug logging is: ${logEnable == true}"
     if (logEnable) runIn(1800, logsOff)
+    state.DriverVersion=driverVer()
 }
 
 def parse(String description) {
@@ -49,16 +50,18 @@ def on() {
     if (logEnable) log.debug "Sending off GET request to [${settings.onURI}]"
 
     try {
-       httpGet( "http://" + sonoffIP + "/cm?cmnd=RfRaw%20" + onURI) { resp ->
+       httpGet( "http://" + sonoffIP + "/cm?cmnd=RfRaw%20" + onURI){ resp ->
             if (resp.success) {
                 sendEvent(name: "switch", value: "on", isStateChange: true)
+                runInMillis(500,"rawOff")
             }
             if (logEnable)
                 if (resp.data) log.debug "${resp.data}"
         }
     } catch (Exception e) {
         log.warn "Call to on failed: ${e.message}"
-    }
+    
+    } 
 }
 
 def off() {
@@ -68,6 +71,7 @@ def off() {
         httpGet("http://" + sonoffIP + "/cm?cmnd=RfRaw%20" + offURI){ resp -> 
             if (resp.success) {
                 sendEvent(name: "switch", value: "off", isStateChange: true)
+                runInMillis(500,"rawOff")
             }
             if (logEnable)
                 if (resp.data) log.debug "${resp.data}"
@@ -75,4 +79,26 @@ def off() {
     } catch (Exception e) {
         log.warn "Call to off failed: ${e.message}"
     }
+}
+
+def rawOff() {
+    if (logEnable) log.debug "Sending off GET request to [${settings.sonoffIP}]"
+
+    try {
+        httpGet("http://" + sonoffIP + "/cm?cmnd=RfRaw%20" + 0){ resp -> 
+            if (resp.success) {
+            }
+            if (logEnable)
+                if (resp.data) log.debug "${resp.data}"
+        }
+    } catch (Exception e) {
+        log.warn "Call to off failed: ${e.message}"
+    }
+}
+
+def installed() {
+    log.info "installed..."
+    log.warn "debug logging is: ${logEnable == true}"
+    if (logEnable) runIn(1800, logsOff)
+    state.DriverVersion=driverVer()
 }
