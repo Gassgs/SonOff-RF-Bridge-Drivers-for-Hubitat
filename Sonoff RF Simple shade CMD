@@ -30,7 +30,7 @@
  *  
  * 
  */
-def driverVer() { return "1.2" }
+def driverVer() { return "1.3" }
 
 metadata {
     definition (name: "Sonoff RF Simple shade CMD", namespace: "Gassgs", author: "Gary G", importUrl: "https://raw.githubusercontent.com/Gassgs/SonOff-RF-Bridge-Drivers-for-Hubitat/master/Sonoff%20RF%20Simple%20shade%20CMD") {
@@ -46,7 +46,8 @@ metadata {
         input "openURI", "text", title: "Open B0 Raw(no spaces)", required: false
         input "closeURI", "text", title: "Close B0 Raw(no  spaces)", required: false
         input "stopURI", "text", title: "Stop B0 Raw(no spaces)", required: false
-		input "sonoffIP", "text", title: "Sonoff RF Bridge IP Address", required: true
+	input "sonoffIP", "text", title: "Sonoff RF Bridge IP Address", required: true
+        input name: "rfoffenabled", type: "bool" , title: "Send RF Raw Off", defaultValue: true
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true
     }
 }
@@ -54,6 +55,11 @@ metadata {
 def logsOff() {
     log.warn "debug logging disabled..."
     device.updateSetting("logEnable", [value: "false", type: "bool"])
+}
+
+def rfoffdisabled() {
+    log.warn "rf raw off disabled..."
+    device.updateSetting("rfoffenabled", [value: "false", type: "bool"])
 }
 
 def updated() {
@@ -74,7 +80,7 @@ def open() {
        httpGet("http://" + sonoffIP + "/cm?cmnd=RfRaw%20" + openURI) { resp ->
             if (resp.success) {
                 sendEvent(name: "windowShade", value: "opening", isStateChange: true)
-                runInMillis(500,"rawOff")
+                  if (rfoffenabled)runInMillis(500,"rawOff")
                 runIn(15, auto)
             }
             if (logEnable)
@@ -92,7 +98,7 @@ def close() {
        httpGet("http://" + sonoffIP + "/cm?cmnd=RfRaw%20" + closeURI) { resp ->
             if (resp.success) {
                 sendEvent(name: "windowShade", value: "closing", isStateChange: true)
-                runInMillis(500,"rawOff")
+                 if (rfoffenabled)runInMillis(500,"rawOff")
                    runIn(15, auto)
             }
             if (logEnable)
@@ -110,7 +116,7 @@ def stop() {
        httpGet("http://" + sonoffIP + "/cm?cmnd=RfRaw%20" + stopURI) { resp ->
             if (resp.success) {
                 sendEvent(name: "windowShade", value: "stopped", isStateChange: true)
-                runInMillis(500,"rawOff")
+                 if (rfoffenabled)runInMillis(500,"rawOff")
             }
             if (logEnable)
                 if (resp.data) log.debug "${resp.data}"
