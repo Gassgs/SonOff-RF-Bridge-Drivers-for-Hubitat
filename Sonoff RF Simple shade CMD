@@ -30,7 +30,7 @@
  *  
  * 
  */
-def driverVer() { return "1.1" }
+def driverVer() { return "1.2" }
 
 metadata {
     definition (name: "Sonoff RF Simple shade CMD", namespace: "Gassgs", author: "Gary G", importUrl: "https://raw.githubusercontent.com/Gassgs/SonOff-RF-Bridge-Drivers-for-Hubitat/master/Sonoff%20RF%20Simple%20shade%20CMD") {
@@ -60,6 +60,7 @@ def updated() {
     log.info "updated..."
     log.warn "debug logging is: ${logEnable == true}"
     if (logEnable) runIn(1800, logsOff)
+    state.DriverVersion=driverVer()
 }
 
 def parse(String description) {
@@ -73,6 +74,7 @@ def open() {
        httpGet("http://" + sonoffIP + "/cm?cmnd=RfRaw%20" + openURI) { resp ->
             if (resp.success) {
                 sendEvent(name: "windowShade", value: "opening", isStateChange: true)
+                runInMillis(500,"rawOff")
                 runIn(15, auto)
             }
             if (logEnable)
@@ -90,6 +92,7 @@ def close() {
        httpGet("http://" + sonoffIP + "/cm?cmnd=RfRaw%20" + closeURI) { resp ->
             if (resp.success) {
                 sendEvent(name: "windowShade", value: "closing", isStateChange: true)
+                runInMillis(500,"rawOff")
                    runIn(15, auto)
             }
             if (logEnable)
@@ -107,6 +110,7 @@ def stop() {
        httpGet("http://" + sonoffIP + "/cm?cmnd=RfRaw%20" + stopURI) { resp ->
             if (resp.success) {
                 sendEvent(name: "windowShade", value: "stopped", isStateChange: true)
+                runInMillis(500,"rawOff")
             }
             if (logEnable)
                 if (resp.data) log.debug "${resp.data}"
@@ -119,6 +123,25 @@ def stop() {
 def auto() {
     sendEvent(name: "windowShade", value: "stopped")
 }    
+
+def rawOff() {
+    if (logEnable) log.debug "Sending off GET request to [${settings.sonoffIP}]"
+
+    try {
+        httpGet("http://" + sonoffIP + "/cm?cmnd=RfRaw%20" + 0){ resp -> 
+            if (resp.success) {
+            }
+            if (logEnable)
+                if (resp.data) log.debug "${resp.data}"
+        }
+    } catch (Exception e) {
+        log.warn "Call to off failed: ${e.message}"
+    }
+}
           
 def installed() {
+     log.info "installed..."
+    log.warn "debug logging is: ${logEnable == true}"
+    if (logEnable) runIn(1800, logsOff)
+    state.DriverVersion=driverVer()
 }
