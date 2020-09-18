@@ -30,7 +30,7 @@
  *  
  * 
  */
-def driverVer() { return "1.3" }
+def driverVer() { return "1.4" }
 
 metadata {
     definition (name: "Sonoff RF Simple shade CMD", namespace: "Gassgs", author: "Gary G", importUrl: "https://raw.githubusercontent.com/Gassgs/SonOff-RF-Bridge-Drivers-for-Hubitat/master/Sonoff%20RF%20Simple%20shade%20CMD") {
@@ -47,6 +47,7 @@ metadata {
         input "closeURI", "text", title: "Close B0 Raw(no  spaces)", required: false
         input "stopURI", "text", title: "Stop B0 Raw(no spaces)", required: false
 	input "sonoffIP", "text", title: "Sonoff RF Bridge IP Address", required: true
+        input  "timeout",  "number" , title: "Timeout in seconds for status to change to stopped", defaultValue: 15, required: true
         input name: "rfoffenabled", type: "bool" , title: "Send RF Raw Off", defaultValue: true
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true
     }
@@ -81,7 +82,7 @@ def open() {
             if (resp.success) {
                 sendEvent(name: "windowShade", value: "opening", isStateChange: true)
                   if (rfoffenabled)runInMillis(500,"rawOff")
-                runIn(15, auto)
+                  runIn(timeout-1, auto)
             }
             if (logEnable)
                 if (resp.data) log.debug "${resp.data}"
@@ -99,7 +100,7 @@ def close() {
             if (resp.success) {
                 sendEvent(name: "windowShade", value: "closing", isStateChange: true)
                  if (rfoffenabled)runInMillis(500,"rawOff")
-                   runIn(15, auto)
+                  runIn(timeout-1, auto)
             }
             if (logEnable)
                 if (resp.data) log.debug "${resp.data}"
