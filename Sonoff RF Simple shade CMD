@@ -7,7 +7,7 @@
  * 
  *      -examples-
  *
- *  push button once = "open",  push button again "if shade is opening/closing" =  "stop"
+ *   push button - if shade is opening/closing" = "stop" , else = "open/close"
  *              or
  *   push and hold = "open" ,  release "stop"
  *
