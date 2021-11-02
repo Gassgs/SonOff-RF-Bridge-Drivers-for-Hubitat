@@ -32,25 +32,25 @@
  *
  */
 
-def driverVer() { return "3.1" }
+def driverVer() { return "3.2" }
 
 metadata {
     definition(name: "Sonoff RF Curtain/Shades", namespace: "Gassgs", author: "GaryG,", importUrl: "https://raw.githubusercontent.com/Gassgs/SonOff-RF-Bridge-Drivers-for-Hubitat/master/Sonoff%20RF%20Bridge%20Curtain-shades%20Driver") {
         
         capability "WindowShade"
-	capability "Switch"
-	capability "Actuator"
-	capability "Switch Level"
+		capability "Switch"
+		capability "Actuator"
+		capability "Switch Level"
         capability "ChangeLevel"   
 	
     }
 }
 preferences {
     section("URIs") {
-        input "openB0", "text", title: "Open B0 Raw(no spaces)", required: false
+         input "openB0", "text", title: "Open B0 Raw(no spaces)", required: false
         input "closeB0", "text", title: "Close B0 Raw(no  spaces)", required: false
         input "stopB0", "text", title: "Stop B0 Raw(no spaces)", required: false
-	input "sonoffIP", "text", title: "Sonoff RF Bridge IP Address", required: true
+		input "sonoffIP", "text", title: "Sonoff RF Bridge IP Address", required: true
         input "timeToClose", "number", title: "Time in seconds it takes to close", required: true
         input name: "rfoffenabled", type: "bool" , title: "Send RF Raw Off", defaultValue: true
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true
@@ -338,6 +338,17 @@ def startLevelChange(direction) {
        close()
     }
 }
+def stopPositionChange(){
+             stop()
+}
+def startPositionChange(direction) {
+    if (direction == "open") {
+        open()
+    } else {
+       close()
+    }
+}
+
 def setLevel(level) {
     setPosition(level)
     
