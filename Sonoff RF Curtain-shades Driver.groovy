@@ -32,7 +32,7 @@
  *
  */
 
-def driverVer() { return "3.2" }
+def driverVer() { return "3.3" }
 
 metadata {
     definition(name: "Sonoff RF Curtain/Shades", namespace: "Gassgs", author: "GaryG,", importUrl: "https://raw.githubusercontent.com/Gassgs/SonOff-RF-Bridge-Drivers-for-Hubitat/master/Sonoff%20RF%20Bridge%20Curtain-shades%20Driver") {
@@ -47,12 +47,14 @@ metadata {
 }
 preferences {
     section("URIs") {
-         input "openB0", "text", title: "Open B0 Raw(no spaces)", required: false
+        input "openB0", "text", title: "Open B0 Raw(no spaces)", required: false
         input "closeB0", "text", title: "Close B0 Raw(no  spaces)", required: false
         input "stopB0", "text", title: "Stop B0 Raw(no spaces)", required: false
 		input "sonoffIP", "text", title: "Sonoff RF Bridge IP Address", required: true
         input "timeToClose", "number", title: "Time in seconds it takes to close", required: true
         input name: "rfoffenabled", type: "bool" , title: "Send RF Raw Off", defaultValue: true
+        input name: "syncShade", type: "bool", title: "Synchronize Status", defaultValue: false
+        input name: "syncFreq", type: "number", title: "Sync Frequency (Minutes)"
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true
     }
 }
@@ -97,6 +99,13 @@ def installed() {
 	if (!sonoffIP ||  !timeToClose) {
 		log.error "Please make sure sonoff IP address  and time to close are configured." 
 	}
+    
+    if (syncShade && !syncFreq) {
+        log.error "Please specify frequency if sync is enabled." 
+    } else {
+        if (syncShade) runIn(syncFreq * 60, sync)
+    }
+    
     log.warn "debug logging is: ${logEnable == true}"
     if (logEnable) runIn(3600, logsOff)
 	state.DriverVersion=driverVer()
@@ -107,6 +116,14 @@ def updated() {
 	if (!sonoffIP ||  !timeToClose) {
 		log.error "Please make sure sonoff IP address  and time to close are configured." 
 	}
+    
+    unschedule(sync)
+    if (syncShade && !syncFreq) {
+        log.error "Please specify frequency if sync is enabled." 
+    } else {
+        sync()
+    }
+    
     log.warn "debug logging is: ${logEnable == true}"
     if (logEnable) runIn(1800, logsOff)
 	state.DriverVersion=driverVer()
@@ -352,4 +369,22 @@ def startPositionChange(direction) {
 def setLevel(level) {
     setPosition(level)
     
+}
+
+def sync() {
+    unschedule(sync)
+        
+    if(syncShade){
+        if (logEnable) log.debug "Synchronizing state: ${state.lastCmd}"
+        
+        // Only synchronize if in expected final state (not opening/closing)
+        if (state.lastCmd == "open") {
+            open()
+        } else if (state.lastCmd == "closed") {
+            close()
+        }
+        
+        if (logEnable) log.debug "Scheduling next sync in ${syncFreq} minutes"
+        runIn(syncFreq * 60, sync)
+    }
 }
